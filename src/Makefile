@@ -1,5 +1,5 @@
 CC=em++
-WOPTS=-Wno-warn-absolute-paths
+WOPTS=
 CFLAGS=-std=c++11 $(WOPTS) --bind -s WASM=1 -s ASSERTIONS=1
 OBJDIR=obj
 

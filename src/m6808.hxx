@@ -36,7 +36,7 @@ public:
     void Step();
     void Execute();
 
-    void WriteData(uint16_t location, uint8_t* data, uint16_t length);
+    void WriteData(uint16_t location, int dataLocation, uint16_t length);
     void WriteByte(uint16_t location, uint8_t value);
 
     bool GetStatus();

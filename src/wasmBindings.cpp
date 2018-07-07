@@ -12,6 +12,7 @@ EMSCRIPTEN_BINDINGS(M6808) {
         .function("GetRegisters", &M6808::GetRegisters)
         .function("GetCycleCount", &M6808::GetCycleCount)
         .function("WriteByte", &M6808::WriteByte)
+        .function("WriteData", &M6808::WriteData)
         .function("GetStatus", &M6808::GetStatus);
 
     // Define Registers Type

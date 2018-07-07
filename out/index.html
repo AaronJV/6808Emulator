@@ -3,92 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Emscripten-Generated Code</title>
+  <title>6808 Emulator</title>
   <script src="M6808.js" id="wasm"></script>
-  <script type='text/javascript'>
-    let m;
-    
-    function load6808() {
-      m = new Module.M6808();
-      
-      let memPos = 0;
-      // ADC #127
-      m.WriteByte(memPos++, 0xA9);
-      m.WriteByte(memPos++, 127);
-      
-      // ADC 0xF0
-      m.WriteByte(memPos++, 0xB9);
-      m.WriteByte(memPos++, 0xF0);
-      
-      // NOP
-      m.WriteByte(memPos++, 0x9D);
-      
-      // INCA
-      m.WriteByte(memPos++, 0x4C);
+  <script type='text/javascript' src="program.js"></script>
+  <style>
+  table {
+    border-collapse: collapse;
+  }
 
-      // SUB #5
-      m.WriteByte(memPos++, 0xA0);
-      m.WriteByte(memPos++, 5);
-      
-      // SUB 0xF1
-      m.WriteByte(memPos++, 0xB0);
-      m.WriteByte(memPos++, 0xF1);
-
-      // SEC
-      m.WriteByte(memPos++, 0x99);
-
-
-      // CLC
-      m.WriteByte(memPos++, 0x98);
-
-      // NEG 0xF0
-      m.WriteByte(memPos++, 0x30);
-      m.WriteByte(memPos++, 0xF0);
-
-      // ADD 0xF0
-      m.WriteByte(memPos++, 0xBB);
-      m.WriteByte(memPos++, 0xF0);
-      
-      
-      m.WriteByte(0xF0, 10);
-      m.WriteByte(0xF1, 3);
-      
-      displayState();
-    }
-    
-    
-    const waitForWasm = setInterval(function() {
-      if (Module.M6808 !== undefined) {
-        load6808();
-        document.getElementById('step').disabled = false;
-        clearInterval(waitForWasm);
-      }
-    }, 100);
-    
-    function displayState() {
-      const regs = m.GetRegisters();
-      
-      document.getElementById('A').innerText = regs.A;
-      document.getElementById('HX').innerText = `${regs.H}:${regs.X}`;
-      document.getElementById('PC').innerText = regs.PC;
-      document.getElementById('SP').innerText = regs.SP;
-      document.getElementById('V').innerText = regs.CCR.V;
-      document.getElementById('H').innerText = regs.CCR.H;
-      document.getElementById('I').innerText = regs.CCR.I;
-      document.getElementById('N').innerText = regs.CCR.N;
-      document.getElementById('Z').innerText = regs.CCR.Z;
-      document.getElementById('C').innerText = regs.CCR.C;
-
-      document.getElementById('cycles').innerText = m.GetCycleCount();
-
-      document.getElementById('running').checked = m.GetStatus();
-    }
-    
-    function step() {
-      m.Step();
-      displayState();
-    }
-  </script>
+  td { 
+    padding: 2px;
+    border: 2px solid;
+  }
+  </style>
 </head>
 <body>
   <h2>State</h2>
@@ -98,49 +25,71 @@
   </div>
   <table>
     <tr>
-      <td>Reg</td><td>State</td>
+      <td>Reg</td><td>Dec</td><td>Hex</td>
     </tr>
     <tr>
-      <td>A</td><td id="A"></td>
+      <td>A</td><td id="A"></td><td id="A_hex"></td>
     </tr>
     <tr>
-      <td>HX</td><td id="HX"></td>
+      <td>H</td><td id="H"></td><td id="H_hex"></td>
     </tr>
     <tr>
-      <td>PC</td><td id="PC"></td>
+      <td>X</td><td id="X"></td><td id="X_hex"></td>
     </tr>
     <tr>
-      <td>SP</td><td id="SP"></td>
+      <td>HX</td><td></td><td id="HX"></td>
     </tr>
     <tr>
-      <td>ccr</td>
-      <td>
-        <table>
-            <tr>
-                <td>V</td><td></td><td></td><td>H</td><td>I</td><td>N</td><td>Z</td><td>C</td>
-            </tr>
-            <tr>
-                <td id="V"></td><td>1</td><td>1</td><td id="H"></td><td id="I"></td><td id="N"></td><td id="Z"></td><td id="C"></td>
-            </tr>
-        </table>
-      </td>
+      <td>PC</td><td></td><td id="PC"></td>
+    </tr>
+    <tr>
+      <td>SP</td><td></td><td id="SP"></td>
     </tr>
   </table>
+  <br />
+  <table>
+    <tr>
+      <td>V</td>
+      <td colspan="2"></td>
+      <td>H</td>
+      <td>I</td>
+      <td>N</td>
+      <td>Z</td>
+      <td>C</td>
+    </tr>
+    <tr>
+      <td id="CCR_V"></td>
+      <td>1</td>
+      <td>1</td>
+      <td id="CCR_H"></td>
+      <td id="CCR_I"></td>
+      <td id="CCR_N"></td>
+      <td id="CCR_Z"></td>
+      <td id="CCR_C"></td>
+    </tr>
+  </table>
+  
+  
   Cycle Count: <span id="cycles"></span>
   <br>
   <h2>Loaded Program</h2>
   <pre>
     <code>
-        ADC #127
-        ADC 0xF0 ; F0 is loaded with 10
-        NOP
-        INCA
-        SUB #5
-        SUB 0xF1 ; F1 is loaded with 3
-        SEC
-        CLC
-        NEG 0xF0
-        ADD 0xF0
+      MOV #10, 0xF0
+      LDA #3
+      STA 0xF1,X
+      LDA #0
+      ADC #127
+      ADC 0xF0
+      NOP
+      INCA
+      SUB #5
+      SUB 0xF1
+      SEC
+      CLC
+      NEG 0xF0
+      LDX 0xF0
+      ADD ,X
     </code>
   </pre>
   <button onclick="step()" id="step" disabled="true">Step</button>

@@ -180,14 +180,15 @@ void M6808::Step() {
 
 
 
-void M6808::WriteData(uint16_t location, uint8_t* data, uint16_t length) {
+void M6808::WriteData(uint16_t location, int dataLocation, uint16_t length) {
     uint16_t len = length;
+    uint8_t* pData = (uint8_t*) dataLocation;
 
     if (len + location > MEM_SIZE) {
         len = MEM_SIZE - location;
     }
 
-    memcpy(memory + location, data, len);
+    memcpy(memory + location, pData, len);
 }
 
 

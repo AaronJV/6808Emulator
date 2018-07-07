@@ -53,7 +53,7 @@ int main() {
         0xFB
     };
     
-    processor.WriteData(0, program, sizeof(program) / sizeof(uint8_t));
+    processor.WriteData(0, (int)program, sizeof(program) / sizeof(uint8_t));
 
     processor.Execute();
 
