@@ -1,0 +1,7 @@
+M6808.sln
+M6808.vcxproj*
+.vs
+.vscode
+Debug
+out/M6808*
+src/obj
