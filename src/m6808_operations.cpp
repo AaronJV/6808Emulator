@@ -160,7 +160,18 @@ void M6808::DEC() {
 };
 
 void M6808::DIV() {
-    FAIL();
+	uint16_t numerator = registers.H << 8 | registers.A;
+
+	if (registers.X == 0) {
+		registers.CCR.C = 1;
+	} else {
+		uint16_t quotient = numerator / registers.X;
+		registers.A = quotient;
+		registers.H = numerator % registers.X;
+		registers.CCR.C = quotient > 0xFF;
+		registers.CCR.Z = registers.A == 0;
+	}
+	registers.PC++;
 };
 
 void M6808::INC() {
@@ -225,7 +236,13 @@ void M6808::MOV() {
 };
 
 void M6808::MUL() {
-    FAIL();
+	uint16_t product = (uint16_t)registers.A * (uint16_t)registers.X;
+
+	registers.A = (uint8_t)product;
+	registers.X = product >> 8;
+	registers.CCR.C = 0;
+	registers.CCR.H = 0;
+	registers.PC++;
 };
 
 void M6808::NEG() {

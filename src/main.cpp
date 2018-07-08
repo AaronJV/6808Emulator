@@ -9,48 +9,42 @@ int main() {
     uint8_t program[] = {
 		// MOV #10, 0xF0
 		0x6E, 10, 0xF0,
-
 		// LDA #3
 		0xA6, 3,
-
 		// STA 0xF1,X
 		0xE7, 0xF1,
-
 		// LDA #0
 		0xA6, 0,
-
         // ADC #127
         0xA9, 127,
-
         // ADC 0xF0
         0xB9, 0xF0,
-
         // NOP
         0x9D,
-
         // INCA
         0x4C,
-
         // SUB #5
         0xA0, 5,
-
         // SUB 0xF1
         0xB0, 0xF1,
-
         // SEC
         0x99,
-
         // CEC
         0x98,
-
         // NEG 0xF0
         0x30, 0xF0,
-
-		// LDX 0xF0
+		// LDX #0xF0
 		0xAE, 0xF0,
-
         // ADD ,X
-        0xFB
+        0xFB,
+		// MUL
+		0x42,
+		// DIV
+		0x52,
+		// LDX #0
+		0xAE, 0,
+		// DIV
+		0x52
     };
     
     processor.WriteData(0, (int)program, sizeof(program) / sizeof(uint8_t));
