@@ -1,6 +1,7 @@
 import { parseLines } from './assembler';
-import { expect } from 'chai';
+import { expect, assert } from 'chai';
 import 'mocha';
+import LineParseError from './lineParseError';
 
 describe('parseLines', () => {
     it('should parse the lines', () => {
@@ -38,5 +39,20 @@ describe('parseLines', () => {
         const matches = parseLines(source);
 
         expect(matches.length).to.equal(2);
+    });
+
+
+    it('should throw an error for invalid lines', () => {
+        const source = `Label: ADD
+        this line is not a valid line
+        PSHX`;
+
+        try {
+            parseLines(source);
+            assert.fail();
+        } catch (error) {
+            expect(error).to.be.a('LineParseError');
+            expect((error as LineParseError).getLineNumber()).to.equal(1);
+        }
     });
 });

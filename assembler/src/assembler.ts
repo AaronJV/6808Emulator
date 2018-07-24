@@ -1,3 +1,5 @@
+import LineParseError from "./lineParseError";
+
 const regex =  /^\s*(?:([A-Z]\w+):\s+)?(?:([A-Z]{3,5}(?:\s+\w+,\s*\w*)?)?(?:\s*;(.*))?(?:))?$/i;
 
 interface IParsedLine {
@@ -18,7 +20,16 @@ export function parseLines(source: string): IParsedLine[] {
     const lines = source.split('\n');
 
     return lines.map((line, index) => {
+        if (!line.trim()) {
+            return null;
+        }
+
         const match = regex.exec(line.trim());
+
+        if (!match) {
+            // line doesn't match pattern
+            throw new LineParseError(index, `'${line}' is invalid`);
+        }
 
         const label = match[1] ? match[1].trim() : null;
         const command = match[2] ? match[2].trim() : null;
