@@ -1,51 +1,31 @@
-import LineParseError from "./lineParseError";
+import { parseLines, parseCommand } from "./parsers";
+import AssemblerError from "./errors/assemblerError";
 
-const regex =  /^\s*(?:([A-Z]\w+):\s+)?(?:([A-Z]{3,5}(?:\s+\w+,\s*\w*)?)?(?:\s*;(.*))?(?:))?$/i;
+const matchLabelOrDirect = /^(?:#(?:(\d+)|\$([A-F0-9]+))|([A-Z]\w+))$/i;
 
-interface IParsedLine {
-    lineNumber: number;
-    label: string;
-    command: string;
-    comment: string;
-};
-
-function assemble(source: string) {
-    const matches = regex.exec(source);
-
-    return matches;
+interface ILabel {
+    [label: string]: number;
 }
 
+function assemble(source: string) {
+    const labels: ILabel = {};
+    const commands = [];
+    const program = [];
 
-export function parseLines(source: string): IParsedLine[] {
-    const lines = source.split('\n');
-
-    return lines.map((line, index) => {
-        if (!line.trim()) {
-            return null;
+    parseLines(source).forEach(cmd => {
+        if (cmd.command) {
+            commands.push(parseCommand(cmd.command, cmd.lineNumber));
         }
-
-        const match = regex.exec(line.trim());
-
-        if (!match) {
-            // line doesn't match pattern
-            throw new LineParseError(index, `'${line}' is invalid`);
+        if (cmd.label) {
+            if (labels[cmd.label] != undefined) {
+                labels[cmd.label] = cmd.lineNumber;
+            } else {
+                throw new AssemblerError(`Label '${cmd.label}' is already defined`, cmd.lineNumber);
+            }
         }
+    });
 
-        const label = match[1] ? match[1].trim() : null;
-        const command = match[2] ? match[2].trim() : null;
-        const comment = match[3] ? match[3].trim() : null;
-
-        if (label || command) {
-            return {
-                lineNumber: index,
-                label,
-                command,
-                comment
-            };
-        }
-
-        return null;
-    }).filter((line) => line !== null);
+    return new Uint8Array(program);
 }
 
 export default assemble;

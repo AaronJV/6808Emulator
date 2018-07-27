@@ -1,11 +1,12 @@
-import { parseLines } from './assembler';
+import { parseLines, parseCommand } from './parsers';
 import { expect, assert } from 'chai';
 import 'mocha';
-import LineParseError from './lineParseError';
+import LineParseError from './errors/lineParseError';
+import CommandParseError from './errors/commandParseError';
 
 describe('parseLines', () => {
     it('should parse the lines', () => {
-        const source = `Label: ADD ;this is a comment
+        const source = `Label: ADD ,X ;this is a comment
         PSHX`;
 
         const parsedLines = parseLines(source);
@@ -13,15 +14,12 @@ describe('parseLines', () => {
         expect(parsedLines.length).to.equal(2);
         expect(parsedLines[0].lineNumber).to.equal(0);
         expect(parsedLines[0].label).to.equal('Label');
-        expect(parsedLines[0].command).to.equal('ADD');
+        expect(parsedLines[0].command).to.equal('ADD ,X');
         expect(parsedLines[0].comment).to.equal('this is a comment');
     });
 
     it('should filter empty lines', () => {
-        const source = `Label: ADD ;this is a comment
-
-
-
+        const source = `Label: ADD , X ;this is a comment
 
         PSHX`;
 
@@ -32,7 +30,7 @@ describe('parseLines', () => {
 
 
     it('should filter comment only lines', () => {
-        const source = `Label: ADD
+        const source = `Label: ADD #5
         ;this is a comment
         PSHX`;
 
@@ -43,7 +41,7 @@ describe('parseLines', () => {
 
 
     it('should throw an error for invalid lines', () => {
-        const source = `Label: ADD
+        const source = `Label: ASRX
         this line is not a valid line
         PSHX`;
 
@@ -56,3 +54,18 @@ describe('parseLines', () => {
         }
     });
 });
+
+
+describe('parseCommands', () => {
+    it('should throw an error for invalid operations', () => {
+        const command = `AAAAAAA`;
+
+        try {
+            parseCommand(command, 0);
+            assert.fail();
+        } catch (error) {
+            expect(error).to.be.a('CommandParseError');
+            expect((error as CommandParseError).getLineNumber()).to.equal(0);
+        }
+    });
+})
