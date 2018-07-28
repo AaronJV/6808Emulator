@@ -1,0 +1,30 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {},
+    "rules": {
+        "trailing-comma": false,
+        "no-consecutive-blank-lines": [
+            true,
+            3
+        ],
+        "quotemark": false,
+        "no-parameter-reassignment": true,
+        "curly": true,
+        "no-invalid-template-strings": true,
+        "indent": [
+            true,
+            "spaces",
+            2
+        ],
+        "cyclomatic-complexity": [
+            true,
+            20
+        ],
+        "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"],
+        "whitespace": true
+    },
+    "rulesDirectory": []
+}

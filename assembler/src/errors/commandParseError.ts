@@ -1,7 +1,7 @@
 import AssemblerError from "./assemblerError";
 
 export default class CommandParseError extends AssemblerError {
-    [Symbol.toStringTag] = 'CommandParseError';
+    protected [Symbol.toStringTag] = 'CommandParseError';
 
     public constructor(message: string, lineNumber: number) {
         super(message, lineNumber);

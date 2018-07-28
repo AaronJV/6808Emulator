@@ -1,8 +1,9 @@
-import { parseLines, parseCommand } from './parsers';
-import { expect, assert } from 'chai';
+import { assert, expect } from 'chai';
 import 'mocha';
-import LineParseError from './errors/lineParseError';
+
 import CommandParseError from './errors/commandParseError';
+import LineParseError from './errors/lineParseError';
+import { parseCommand, parseLines } from './parsers';
 
 describe('parseLines', () => {
     it('should parse the lines', () => {
@@ -68,4 +69,4 @@ describe('parseCommands', () => {
             expect((error as CommandParseError).getLineNumber()).to.equal(0);
         }
     });
-})
+});

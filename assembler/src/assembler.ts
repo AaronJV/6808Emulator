@@ -1,5 +1,5 @@
-import { parseLines, parseCommand } from "./parsers";
-import AssemblerError from "./errors/assemblerError";
+import AssemblerError from './errors/assemblerError';
+import { parseCommand, parseLines } from './parsers';
 
 const matchLabelOrDirect = /^(?:#(?:(\d+)|\$([A-F0-9]+))|([A-Z]\w+))$/i;
 
@@ -12,12 +12,12 @@ function assemble(source: string) {
     const commands = [];
     const program = [];
 
-    parseLines(source).forEach(cmd => {
+    parseLines(source).forEach((cmd) => {
         if (cmd.command) {
             commands.push(parseCommand(cmd.command, cmd.lineNumber));
         }
         if (cmd.label) {
-            if (labels[cmd.label] != undefined) {
+            if (labels[cmd.label] !== undefined) {
                 labels[cmd.label] = cmd.lineNumber;
             } else {
                 throw new AssemblerError(`Label '${cmd.label}' is already defined`, cmd.lineNumber);

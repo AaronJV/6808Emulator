@@ -1,3 +1,3 @@
 import assemble from "./assembler";
 
-export default assemble
+export default assemble;

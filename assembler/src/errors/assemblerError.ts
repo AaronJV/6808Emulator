@@ -1,6 +1,6 @@
 export default class AssemblerError extends Error {
-    [Symbol.toStringTag] = 'AssemblerError';
     protected _lineNumber: number;
+    protected [Symbol.toStringTag] = 'AssemblerError';
 
     public constructor(message: string, lineNumber: number) {
         super(message);
