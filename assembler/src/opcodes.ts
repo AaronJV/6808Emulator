@@ -11,19 +11,14 @@ export enum AddressingModes {
     Relative = 'REL'
 }
 
-interface IOperation {
-    opCode: number;
-    operands: number;
-}
-
 interface IOpCodeMap {
     [nemonic: string]: {
         rel?: boolean;
         bit?: boolean;
         opCodes?: {
-            [addressingMode: string]: number
-        }
-    }
+            [addressingMode: string]: number|((bitNum: number) => number);
+        };
+    };
 }
 
 const opcodes: IOpCodeMap = {
@@ -110,10 +105,10 @@ const opcodes: IOpCodeMap = {
         }
     },
     BCC: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x24
-        }
+        },
+        rel: true
     },
     BCLR: {
         bit: true,
@@ -122,64 +117,64 @@ const opcodes: IOpCodeMap = {
         }
     },
     BCS: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x25
-        }
+        },
+        rel: true
     },
     BEQ: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x27
-        }
+        },
+        rel: true
     },
     BGE: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x90
-        }
+        },
+        rel: true
     },
     BGT: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x92
-        }
+        },
+        rel: true
     },
     BHCC: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x28
-        }
+        },
+        rel: true
     },
     BHCS: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x29
-        }
+        },
+        rel: true
     },
     BHI: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x22
-        }
+        },
+        rel: true
     },
     BHS: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x24
-        }
+        },
+        rel: true
     },
     BIH: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x2F
-        }
+        },
+        rel: true
     },
     BIL: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x2E
-        }
+        },
+        rel: true
     },
     BIT: {
         opCodes: {
@@ -194,115 +189,116 @@ const opcodes: IOpCodeMap = {
         }
     },
     BLE: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x93
-        }
+        },
+        rel: true
     },
     BLO: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x25
-        }
+        },
+        rel: true
     },
     BLS: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x23
-        }
+        },
+        rel: true
     },
     BLT: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x91
-        }
+        },
+        rel: true
     },
     BMC: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x2C
-        }
+        },
+        rel: true
     },
     BMI: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x2B
-        }
+        },
+        rel: true
     },
     BMS: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x2D
-        }
+        },
+        rel: true
     },
     BNE: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x26
-        }
+        },
+        rel: true
     },
     BPL: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x2A
-        }
+        },
+        rel: true
     },
     BRA: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x20
-        }
+        },
+        rel: true
     },
     BRCLR: {
-        rel: true,
         opCodes: {
             [AddressingModes.Direct]: 0
-        }
+        },
+        rel: true
     },
     BRN: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0x21
-        }
+        },
+        rel: true
     },
     BRSET: {
-        rel: true,
+        bit: true,
         opCodes: {
-            [AddressingModes.Direct]: 0
-        }
+            [AddressingModes.Direct]: (bitNumber: number) => 2 * bitNumber
+        },
+        rel: true
     },
     BSET: {
-        rel: true,
+        bit: true,
         opCodes: {
-            [AddressingModes.Direct]: 0
+            [AddressingModes.Direct]: (bitNumber: number) => 0x10 + 2 * bitNumber
         }
     },
     BSR: {
-        rel: true,
         opCodes: {
             [AddressingModes.Relative]:                0xAD
-        }
+        },
+        rel: true
     },
     CBEQ: {
-        rel: true,
         opCodes: {
             [AddressingModes.Direct]:                  0x31,
             [AddressingModes.Indexed8BitOffset]:       0x61,
             [AddressingModes.Indexed]:                 0x71,
             [AddressingModes.StackPointer8BitOffset]:  0x9E61
-        }
+        },
+        rel: true
     },
     CBEQA: {
-        rel: true,
         opCodes: {
             [AddressingModes.Immediate]:               0x41
-        }
+        },
+        rel: true
     },
     CBEQX: {
-        rel: true,
         opCodes: {
             [AddressingModes.Immediate]:               0x51
-        }
+        },
+        rel: true
     },
     CLC: {
         opCodes: {
@@ -315,27 +311,27 @@ const opcodes: IOpCodeMap = {
         }
     },
     CLR: {
-        rel: true,
         opCodes: {
             [AddressingModes.Direct]:                  0x3F,
             [AddressingModes.Indexed8BitOffset]:       0x6F,
             [AddressingModes.Indexed]:                 0x7F,
             [AddressingModes.StackPointer8BitOffset]:  0x9E6F
-        }
+        },
+        rel: true
     },
     CLRA: {
         opCodes: {
             [AddressingModes.Inherent]:                0x4F
         }
     },
-    CLRX: {
-        opCodes: {
-            [AddressingModes.Inherent]:                0x5F
-        }
-    },
     CLRH: {
         opCodes: {
             [AddressingModes.Inherent]:                0x8C
+        }
+    },
+    CLRX: {
+        opCodes: {
+            [AddressingModes.Inherent]:                0x5F
         }
     },
     CMP: {
@@ -392,25 +388,25 @@ const opcodes: IOpCodeMap = {
         }
     },
     DBNZ: {
-        rel: true,
         opCodes: {
             [AddressingModes.Direct]:                  0x3B,
             [AddressingModes.Indexed8BitOffset]:       0x6B,
             [AddressingModes.Indexed]:                 0x7B,
             [AddressingModes.StackPointer8BitOffset]:  0x9E6B
-        }
+        },
+        rel: true
     },
     DBNZA: {
-        rel: true,
         opCodes: {
             [AddressingModes.Inherent]:                0x4B
-        }
+        },
+        rel: true
     },
     DBNZX: {
-        rel: true,
         opCodes: {
             [AddressingModes.Inherent]:                0x5B
-        }
+        },
+        rel: true
     },
     DEC: {
         opCodes: {
@@ -800,6 +796,6 @@ const opcodes: IOpCodeMap = {
             [AddressingModes.Inherent]:                0x8F
         }
     }
-}
+};
 
 export default opcodes;
