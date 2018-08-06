@@ -52,7 +52,7 @@ export function parseLines(source: string): IParsedLine[] {
 }
 
 
-function parseImmediateVal(operand: string): number {
+function parseNumberVal(operand: string): number {
     let value: number = null;
 
     if (operand.charAt(0) === '$') {
@@ -106,7 +106,7 @@ function parseRelativeVal(rel: string, lineNumber: number) {
 
     if (rel.startsWith("#")) {
         // immediate value
-        parsed.offset = parseImmediateVal(rel.slice(1));
+        parsed.offset = parseNumberVal(rel.slice(1));
         parsed.usesLabel = false;
 
         if (parsed.offset < -127 || parsed.offset > 255) {
@@ -163,7 +163,7 @@ export function parseCommand(command: string, lineNumber: number): IParsedComman
 
     if (operation.bit) {
         bitNumber = parseBitVal(operands[0], lineNumber);
-        operands.splice(0, 0);
+        operands.splice(0, 1);
     }
 
 
@@ -179,7 +179,7 @@ export function parseCommand(command: string, lineNumber: number): IParsedComman
     } else if (operands.length === 1) {
         if (operands[0].startsWith('#')) {
             // immediate
-            const value = parseImmediateVal(operands[0].slice(1));
+            const value = parseNumberVal(operands[0].slice(1));
 
             if (value < -127 || value > 255) {
                 throw new Error();
@@ -189,6 +189,17 @@ export function parseCommand(command: string, lineNumber: number): IParsedComman
             parsedCommand.operands.push(value);
         } else if (!operands[0] && indexed) {
             addressingMode = AddressingModes.Indexed;
+        } else {
+            addressingMode = AddressingModes.Direct;
+
+            const operand = parseNumberVal(operands[0]);
+
+            if (isNaN(operand)) {
+                parsedCommand.usesLabel = true;
+                parsedCommand.operands.push(operands[0]);
+            } else {
+                parsedCommand.operands.push(operand);
+            }
         }
     } else {
         addressingMode = AddressingModes.Inherent;
@@ -197,9 +208,16 @@ export function parseCommand(command: string, lineNumber: number): IParsedComman
     if (operation.opCodes[addressingMode] === undefined) {
         const msg = `Operation '${mnemonic}' does not support addressing mode of '${addressingMode}'`;
         throw new CommandParseError(msg, lineNumber);
+    } else if (operation.opCodes[addressingMode] instanceof Function) {
+        const func = operation.opCodes[addressingMode] as (arg: number) => number;
+        parsedCommand.opCode = func(bitNumber);
+    } else {
+        parsedCommand.opCode = operation.opCodes[addressingMode] as number;
     }
 
-    parsedCommand.opCode = operation.opCodes[addressingMode];
+    if (relativeOffset !== undefined) {
+        parsedCommand.operands.push(relativeOffset);
+    }
 
     return parsedCommand;
 }

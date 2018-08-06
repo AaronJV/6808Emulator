@@ -69,4 +69,18 @@ describe('parseCommands', () => {
             expect((error as CommandParseError).getLineNumber()).to.equal(0);
         }
     });
+
+    it('should parse bit commands', () => {
+        let parsed = parseCommand('BSET 2, $FF', 0);
+
+        expect(parsed.opCode).to.equal(0x14);
+        expect(parsed.operands).to.have.length(1);
+        expect(parsed.operands[0]).to.equal(0xFF);
+
+        parsed = parseCommand('BRSET 7, LABEL1, LABEL2', 0);
+
+        expect(parsed.opCode).to.equal(0x0E);
+        expect(parsed.operands).to.have.length(2);
+        expect(parsed.operands).to.eql(['LABEL1', 'LABEL2']);
+    });
 });
