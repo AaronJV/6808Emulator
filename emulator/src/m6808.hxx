@@ -60,12 +60,6 @@ private:
     //               Opaerations               //
     // *************************************** //
 
-    // Bit-Manipulations
-    void BCLR();
-    void BRCLR();
-    void BRSET();
-    void BSET();
-
     // Branching
     void BCC();
     void BCS();
@@ -83,6 +77,8 @@ private:
     void BPL();
     void BRA();
     void BRN();
+    void BRCLR();
+    void BRSET();
 
     // Read/Modify/Write
     void ASR();
@@ -106,6 +102,8 @@ private:
     void ROR();
     void STHX();
     void TST();
+    void BCLR();
+    void BSET();
 
     // Control
     void BGE();

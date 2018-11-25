@@ -1,12 +1,14 @@
 CC=em++
-WOPTS=
+WOPTS=-s ERROR_ON_UNDEFINED_SYMBOLS=0
 CFLAGS=-std=c++11 $(WOPTS) --bind -s WASM=1 -s ASSERTIONS=1
 OBJDIR=obj
 
 
 SRCS=$(filter-out main.cpp, $(wildcard *.cpp */*.cpp))
 OBJS=$(patsubst %.cpp,$(OBJDIR)/%.bc,$(SRCS))
-EXEC=../out/M6808.js
+EXEC=/out/M6808.js
+
+$(shell mkdir -p $(dir $(OBJS)) >/dev/null)
 
 all: $(EXEC)
 
@@ -19,5 +21,5 @@ $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(EXEC)
 
 clean:
-	rm -f $(OBJDIR)/*
+	rm -rf $(OBJDIR)/*
 	rm -f $(EXEC)
