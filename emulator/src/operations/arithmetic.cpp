@@ -1,5 +1,15 @@
 #include "../m6808.hxx"
 
+/**
+ * @brief Set Addition Operations CCR
+ * 
+ * @param initialCC The current state of the CCR
+ * @param acc       The value of the accumulator before the operation
+ * @param data      the value of the memory used
+ * @param result    the resulting value
+ * 
+ * @return ConditionCodes The CCR from the addition
+ */
 ConditionCodes addConditionCodes(ConditionCodes initialCC, uint8_t acc, uint8_t data, uint8_t result) {
     uint8_t a7 = (1 << 7) & acc;
     uint8_t a3 = (1 << 3) & acc;
@@ -21,6 +31,17 @@ ConditionCodes addConditionCodes(ConditionCodes initialCC, uint8_t acc, uint8_t 
 }
 
 
+
+/**
+ * @brief Set Subtraction Operations CCR
+ * 
+ * @param initialCC The current state of the CCR
+ * @param acc       The value of the accumulator before the operation
+ * @param data      the value of the memory used
+ * @param result    the resulting value
+ * 
+ * @return ConditionCodes The CCR from the subtraction
+ */
 ConditionCodes subtractConditionCodes(ConditionCodes initialCC, uint8_t acc, uint8_t data, uint8_t result) {
     uint8_t a7 = (1 << 7) & acc;
     uint8_t m7 = (1 << 7) & data;
@@ -37,6 +58,7 @@ ConditionCodes subtractConditionCodes(ConditionCodes initialCC, uint8_t acc, uin
 
     return ccr;
 }
+
 
 
 /**
@@ -61,6 +83,7 @@ void M6808::ADC() {
 };
 
 
+
 /**
  * @brief Add without Carry
  * 
@@ -80,6 +103,8 @@ void M6808::ADD() {
 	registers.A += number;
     registers.CCR = addConditionCodes(registers.CCR, acc, number, registers.A);
 };
+
+
 
 /**
  * @brief Subtract
@@ -101,9 +126,7 @@ void M6808::SUB() {
     registers.CCR = subtractConditionCodes(registers.CCR, acc, number, registers.A);
 };
 
-void M6808::CMP() {
-    FAIL();
-};
+
 
 /**
  * @brief Subtract with Carry
@@ -126,25 +149,111 @@ void M6808::SBC() {
     registers.CCR = subtractConditionCodes(registers.CCR, acc, number, registers.A);
 };
 
-void M6808::CPX() {
-    FAIL();
-};
 
+
+/**
+ * @brief Logical AND
+ * 
+ * Performs the logical AND between the contents of A and the
+ * contents of M and places the result in A
+ * 
+ * CCR:
+ *  V: 0
+ *  N: R7
+ *  Z: R == 0
+ */
 void M6808::AND() {
-    FAIL();
+    uint8_t number = GetRegisterMemoryOperand();
+
+    registers.A &= number;
+
+    registers.CCR.V = 0;
+    registers.CCR.N = ((int8_t)registers.A) < 0;
+    registers.CCR.Z = registers.A == 0;
 };
 
+
+
+/**
+ * @brief Bit Test
+ * 
+ * Performs the logical AND comparison of the contents of A and
+ * the contents of M and modifies the condition codes accordingly.
+ * Neither the contents of A nor M are altered.
+ * 
+ * CCR:
+ *  V: 0
+ *  N: R7
+ *  Z: R == 0
+ */
 void M6808::BIT() {
-    FAIL();
+    uint8_t number = GetRegisterMemoryOperand();
+    uint8_t result = registers.A & number;
+
+    registers.CCR.V = 0;
+    registers.CCR.N = ((int8_t)result) < 0;
+    registers.CCR.Z = result == 0;
 };
 
+
+
+/**
+ * @brief Inclusive-OR Accumulator and Memory
+ * 
+ * Performs the logical inclusive-OR between the contents of A
+ * and the contents of M and places the result in A
+ * 
+ * CCR:
+ *  V: 0
+ *  N: R7
+ *  Z: R == 0
+ */
 void M6808::ORA() {
-    FAIL();
+    uint8_t number = GetRegisterMemoryOperand();
+
+    registers.A |= number;
+
+    registers.CCR.V = 0;
+    registers.CCR.N = ((int8_t)registers.A) < 0;
+    registers.CCR.Z = registers.A == 0;
 };
 
-void M6808::AIX() {
-    FAIL();
+
+/**
+ * @brief Add Immediate Value (Signed) to Stack Pointer
+ * 
+ * Adds an immediate operand to the 16-bit stack pointer
+ * 
+ * CCR:
+ *  unchanged
+ * 
+ */
+void M6808::AIS() {
+    int16_t number = (int16_t)GetRegisterMemoryOperand();
+    registers.SP += number;
 };
+
+
+/**
+ * @brief Add Immediate Value (Signed) to Index Register
+ * 
+ * Adds an immediate operand to the 16-bit index register,
+ * formed by the concatenation of the H and X registers
+ * 
+ * CCR:
+ *  unchanged
+ * 
+ */
+void M6808::AIX() {
+    uint16_t indexReg = registers.H << 8 | registers.X;
+    int16_t number = (int16_t)GetRegisterMemoryOperand();
+
+    indexReg += number;
+    registers.H = indexReg >> 8;
+    registers.X = indexReg & 0xFF;
+};
+
+
 
 /**
  * @brief Increment
@@ -164,6 +273,8 @@ void M6808::INC() {
     registers.CCR.N = ((int8_t)*pNumber) < 0;
 };
 
+
+
 /**
  * @brief Decrement
  * 
@@ -181,6 +292,8 @@ void M6808::DEC() {
     registers.CCR.Z = *pNumber == 0;
     registers.CCR.N = ((int8_t)*pNumber) < 0;
 };
+
+
 
 /**
  * @brief Divide
@@ -236,6 +349,8 @@ void M6808::MUL() {
 	registers.PC++;
 };
 
+
+
 /**
  * @brief Negate (Two’s Complement)
  * 
@@ -262,9 +377,3 @@ void M6808::NEG() {
     registers.CCR.N = ((int8_t)*pNumber) < 0;
     registers.CCR.V = *pNumber >> 7 && m7;
 };
-
-
-void M6808::AIS() {
-    FAIL();
-};
-

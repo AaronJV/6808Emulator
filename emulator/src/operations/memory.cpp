@@ -24,11 +24,18 @@ void M6808::DAA() {
     FAIL();
 };
 
+void M6808::CPX() {
+    FAIL();
+};
+
 void M6808::DBNZ() {
     FAIL();
 };
 
 
+void M6808::CMP() {
+    FAIL();
+};
 
 
 
