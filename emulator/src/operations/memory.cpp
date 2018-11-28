@@ -1,36 +1,182 @@
 #include "../m6808.hxx"
 
+
+uint8_t isBetween(uint8_t number, uint8_t lower, uint8_t upper) {
+	return lower <= number && number <= upper;
+}
+
+/**
+ * @brief Arithmetic Shift Right
+ * 
+ * Shifts all bits of A, X, or M one place to the right.
+ * Bit 7 is held constant. Bit 0 is loaded into the C bit of the CCR
+ * 
+ * CCR:
+ *  V: R7 XOR b0
+ *  N: R7
+ *  Z: R == 0
+ *  C: b0
+ */
 void M6808::ASR() {
-    FAIL();
+    uint8_t* operand = GetReadModifyWriteOperand();
+
+	uint8_t msb = (*operand) & 0xF0;
+	registers.CCR.C = (*operand) & 0x01;
+	registers.CCR.N = msb > 0;
+	*operand = ((*operand) >> 1 | msb);
+	registers.CCR.V = (registers.CCR.C != registers.CCR.N);
+	registers.CCR.Z = *operand == 0;
 };
 
-void M6808::CBEQ() {
-    FAIL();
-};
 
+
+/**
+ * @brief Clear
+ * 
+ * The contents of memory (M), A, X, or H are replaced with zeros
+ * 
+ * CCR:
+ *  V: 0
+ *  N: 0
+ *  Z: 1
+ */
 void M6808::CLR() {
-    FAIL();
+    uint8_t* operand = GetReadModifyWriteOperand();
+	*operand = 0;
+	registers.CCR.V = 0;
+	registers.CCR.N = 0;
+	registers.CCR.Z = 1;
 };
 
+
+
+/**
+ * @brief Compliment (One's Compliment)
+ * 
+ * Replaces the contents of A, X, or M with the one’s complement
+ * 
+ * CCR:
+ *  V: 0
+ *  N: R7
+ *  Z: R == 0
+ *  C: 1
+ */
 void M6808::COM() {
-    FAIL();
+    uint8_t* operand = GetReadModifyWriteOperand();
+	*operand = 0xFF - *operand;
+	registers.CCR.V = 0;
+	registers.CCR.N = ((int8_t)*operand) < 0;
+	registers.CCR.Z = *operand == 0;
+	registers.CCR.C = 1;
 };
 
+
+
+/**
+ * @brief Compare Index Register with Memory
+ * 
+ * CPHX compares index register (H:X) with the 16-bit value in memory
+ * and sets the condition codes, which may then be used for arithmetic
+ * (signed or unsigned) and logical conditional branching
+ * 
+ * CCR:
+ *  V: H7&~M15&~R15 | ~H7&M15&R15
+ *  N: R15
+ *  Z: R == 0
+ *  C: ~H7&M15 | M15&R15 | R15&~H7
+ */
 void M6808::CPHX() {
-    FAIL();
+	uint8_t opCode = memory[registers.PC++];
+	uint16_t index = registers.H << 8 | registers.X;
+	uint16_t other = 0;
+
+	if (opCode == 0x65) {
+		// immediate
+		other = memory[registers.PC++] << 8 | memory[registers.PC++];
+	} else if (opCode == 0x75) {
+		// direct
+		uint16_t addr = memory[registers.PC++];
+		other = memory[addr] << 8 | memory[addr + 1];
+	} else {
+    	FAIL();
+		return;
+	}
+
+	int16_t result = index - other;
+
+	int8_t twosCheckOne = ((int8_t)registers.H) < 0 && ((int16_t)other) > 0  && ((int16_t)result) > 0;
+	int8_t twosCheckTwo = ((int8_t)registers.H) > 0 && ((int16_t)other) < 0  && ((int16_t)result) < 0;
+
+	int8_t carry1 = ((int8_t)registers.H) > 0 && ((int16_t)other) < 0;
+	int8_t carry2 = ((int16_t)other) > 0 && ((int16_t)result) > 0;
+	int8_t carry3 = ((int16_t)result) < 0 && ((int8_t)registers.H) > 0;
+
+	registers.CCR.V = twosCheckOne || twosCheckTwo;
+	registers.CCR.N = result < 0;
+	registers.CCR.Z = result == 0;
+	registers.CCR.C = carry1 || carry2 || carry3;
 };
 
+
+
+/**
+ * @brief Decimal Adjust Accumulator
+ * 
+ * Adjusts the contents of the accumulator and the state of the CCR carry
+ * bit after an ADD or ADC operation involving binary-coded decimal (BCD)
+ * values, so that there is a correct BCD sum and an accurate carry indication
+ */
 void M6808::DAA() {
-    FAIL();
+	uint8_t msbits = registers.A & 0xF0 >> 4;
+	uint8_t lsbits = registers.A & 0x0F;
+
+	uint8_t correctionFactor = 0;
+	if (registers.CCR.C) {
+		if (isBetween(msbits, 0, 2) && !registers.CCR.H && isBetween(lsbits, 0, 9)) {
+			correctionFactor = 0x60;
+		} else if (isBetween(msbits, 0, 2) && !registers.CCR.H && isBetween(lsbits, 0xA, 0xF)) {
+			correctionFactor = 0x66;
+		} else if (isBetween(msbits, 0, 3) && registers.CCR.H && isBetween(lsbits, 0, 3)) {
+			correctionFactor = 0x66;
+		}
+	} else {
+		if (isBetween(msbits, 0, 9) && !registers.CCR.H && isBetween(lsbits, 0, 9)) {
+			correctionFactor = 0x00;
+		} else if (isBetween(msbits, 0, 8) && !registers.CCR.H && isBetween(lsbits, 0xA, 0xF)) {
+			correctionFactor = 0x06;
+		} else if (isBetween(msbits, 0, 9) && registers.CCR.H && isBetween(lsbits, 0, 3)) {
+			correctionFactor = 0x06;
+		} else if (isBetween(msbits, 0xA, 0xF) && !registers.CCR.H && isBetween(lsbits, 0, 9)) {
+			correctionFactor = 0x60;
+			registers.CCR.C = 1;
+		} else if (isBetween(msbits, 0x9, 0xF) && !registers.CCR.H && isBetween(lsbits, 0xA, 0xF)) {
+			correctionFactor = 0x66;
+			registers.CCR.C = 1;
+		} else if (isBetween(msbits, 0xA, 0xF) && registers.CCR.H && isBetween(lsbits, 0, 3)) {
+			correctionFactor = 0x66;
+			registers.CCR.C = 1;
+		}
+	}
+
+	registers.A += correctionFactor;
+
+	registers.CCR.N = ((int8_t)registers.A) < 0;
+	registers.CCR.Z = registers.A == 0;
+	registers.CCR.C = registers.A > 99;
 };
+
+
 
 void M6808::CPX() {
     FAIL();
 };
 
+
+
 void M6808::DBNZ() {
     FAIL();
 };
+
 
 
 void M6808::CMP() {
@@ -43,13 +189,19 @@ void M6808::LDHX() {
     FAIL();
 };
 
+
+
 void M6808::LSL() {
     FAIL();
 };
 
+
+
 void M6808::LSR() {
     FAIL();
 };
+
+
 
 /**
  * @brief Move
