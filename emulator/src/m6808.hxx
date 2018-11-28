@@ -110,7 +110,6 @@ private:
     void BGT();
     void BLE();
     void BLT();
-    void CEC();
     void CLC();
     void CLI();
     void NOP();
@@ -126,7 +125,6 @@ private:
     void TAP();
     void TAX();
     void TPA();
-    void TRS();
     void TSX();
     void TXA();
     void TXS();

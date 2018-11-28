@@ -29,7 +29,7 @@ int main() {
         0xB0, 0xF1,
         // SEC
         0x99,
-        // CEC
+        // CLC
         0x98,
         // NEG 0xF0
         0x30, 0xF0,

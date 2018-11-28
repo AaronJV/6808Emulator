@@ -15,10 +15,6 @@ void M6808::BLT() {
     FAIL();
 };
 
-void M6808::CEC() {
-    FAIL();
-};
-
 void M6808::CLC() {
     registers.CCR.C = 0;
     registers.PC++;
@@ -79,10 +75,6 @@ void M6808::TAX() {
 };
 
 void M6808::TPA() {
-    FAIL();
-};
-
-void M6808::TRS() {
     FAIL();
 };
 

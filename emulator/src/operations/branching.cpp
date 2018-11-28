@@ -12,6 +12,11 @@ void M6808::BEQ() {
     FAIL();
 };
 
+void M6808::CBEQ() {
+    FAIL();
+};
+
+
 void M6808::BHCC() {
     FAIL();
 };

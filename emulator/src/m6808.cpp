@@ -214,6 +214,8 @@ int M6808::GetCycleCount() {
 
 M6808::M6808() {
     running = true;
+    cycleCount = 0;
+
 	registers.A = 0;
 	registers.H = 0;
 	registers.X = 0;
