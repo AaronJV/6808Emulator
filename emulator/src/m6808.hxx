@@ -6,6 +6,12 @@
 #define _ 0
 #define MEM_SIZE 0xFFFF
 
+#ifdef __EMSCRIPTEN__
+typedef int memory_ptr;
+#else
+typedef uint8_t* memory_ptr;
+#endif
+
 typedef struct ConditionCodes {
     uint8_t V; // Two's Compliment Flag
     uint8_t H; // Half-Carry Flag
@@ -36,7 +42,7 @@ public:
     void Step();
     void Execute();
 
-    void WriteData(uint16_t location, int dataLocation, uint16_t length);
+    void WriteData(uint16_t location, memory_ptr dataLocation, uint16_t length);
     void WriteByte(uint16_t location, uint8_t value);
 
     bool GetStatus();

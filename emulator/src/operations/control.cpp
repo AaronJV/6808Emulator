@@ -91,5 +91,7 @@ void M6808::TXS() {
 };
 
 void M6808::WAIT() {
-    FAIL();
-};
+    running = false;
+    registers.PC++;
+    registers.CCR.I = 0;
+}

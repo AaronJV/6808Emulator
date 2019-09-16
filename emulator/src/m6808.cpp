@@ -103,7 +103,7 @@ void M6808::Execute() {
             opCode = ((opCode & 0x0F) << 4) | ((opCode & 0xF0) >> 4);
             (this->*opTable[opCode])();
 
-            if (running) {
+            if (running || opCode == 0xF8) {
                 cycleCount += cycles[opCode];
             }
         } else {
@@ -131,7 +131,7 @@ void M6808::Execute() {
             }
         }
     }
-};
+}
 
 
 void M6808::Step() {
@@ -180,15 +180,20 @@ void M6808::Step() {
 
 
 
-void M6808::WriteData(uint16_t location, int dataLocation, uint16_t length) {
+void M6808::WriteData(uint16_t location, memory_ptr pData, uint16_t length) {
     uint16_t len = length;
-    uint8_t* pData = (uint8_t*) dataLocation;
+
+#ifdef __EMSCRIPTEN__
+    uint8_t* pointer = (uint8_t*) pData;
+#else
+    uint8_t* pointer = pData;
+#endif
 
     if (len + location > MEM_SIZE) {
         len = MEM_SIZE - location;
     }
 
-    memcpy(memory + location, pData, len);
+    memcpy(memory + location, pointer, len);
 }
 
 

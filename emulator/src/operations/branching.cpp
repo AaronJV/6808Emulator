@@ -17,6 +17,10 @@ void M6808::CBEQ() {
 };
 
 
+void M6808::DBNZ() {
+    FAIL();
+};
+
 void M6808::BHCC() {
     FAIL();
 };

@@ -26,7 +26,7 @@ void M6808::ASR() {
 	*operand = ((*operand) >> 1 | msb);
 	registers.CCR.V = (registers.CCR.C != registers.CCR.N);
 	registers.CCR.Z = *operand == 0;
-};
+}
 
 
 
@@ -46,7 +46,7 @@ void M6808::CLR() {
 	registers.CCR.V = 0;
 	registers.CCR.N = 0;
 	registers.CCR.Z = 1;
-};
+}
 
 
 
@@ -68,7 +68,7 @@ void M6808::COM() {
 	registers.CCR.N = ((int8_t)*operand) < 0;
 	registers.CCR.Z = *operand == 0;
 	registers.CCR.C = 1;
-};
+}
 
 
 
@@ -115,7 +115,7 @@ void M6808::CPHX() {
 	registers.CCR.N = result < 0;
 	registers.CCR.Z = result == 0;
 	registers.CCR.C = carry1 || carry2 || carry3;
-};
+}
 
 
 
@@ -163,43 +163,99 @@ void M6808::DAA() {
 	registers.CCR.N = ((int8_t)registers.A) < 0;
 	registers.CCR.Z = registers.A == 0;
 	registers.CCR.C = registers.A > 99;
-};
+}
 
 
+ConditionCodes compareWithRegister(uint8_t reg, uint8_t memory, ConditionCodes ccr) {
+	uint8_t result = reg - memory;
 
+	ccr.V = (reg < 0 && result >= 0 && memory >= 0) || (reg >= 0 && result < 0 && memory < 0);
+	ccr.N = result < 0;
+	ccr.Z = result == 0;
+	ccr.C = (reg < 0 && memory >= 0) || (memory < 0 && result < 0) || (result < 0 && reg >= 0);
+
+	return ccr;
+}
+
+/**
+ * @brief Compare X (Index Register Low) with Memory
+ *
+ * Compares the contents of X to the contents of M and sets the condition codes,
+ * which may then be used for arithmetic (signed or unsigned) and logical conditional branching.
+ * The contents of both -X and M are unchanged.
+ */
 void M6808::CPX() {
-    FAIL();
-};
+    uint8_t operand = GetRegisterMemoryOperand();
+	registers.CCR = compareWithRegister(registers.X, operand, registers.CCR);
+}
 
 
-
-void M6808::DBNZ() {
-    FAIL();
-};
-
-
-
+/**
+ * @brief Compare Accumulator with Memory
+ *
+ * Compares the contents of A to the contents of M and sets the condition codes, which may then
+ * be used for arithmetic (signed or unsigned) and logical conditional branching.
+ * The contents of both A and M are unchanged.
+ */
 void M6808::CMP() {
-    FAIL();
+    uint8_t operand = GetRegisterMemoryOperand();
+	registers.CCR = compareWithRegister(registers.A, operand, registers.CCR);
 };
 
 
-
+/**
+ * @brief Load Index Register from Memory
+ *
+ * Loads the contents of the specified memory location into the index register (H:X).
+ * The N and Z condition codes are set according to the data; V is cleared.
+ * This allows conditional branching after the load without having to perform a separate test or compare.
+ */
 void M6808::LDHX() {
-    FAIL();
-};
+    uint8_t opCode = memory[registers.PC++];
+
+	if (opCode == 0x45) {
+		registers.H = memory[registers.PC++];
+		registers.X = memory[registers.PC++];
+	} else {
+		uint8_t location = memory[registers.PC++];
+		registers.H = memory[location];
+		registers.X = memory[location + 1];
+	}
+
+
+	registers.CCR.V = 0;
+	registers.CCR.N = ((int8_t) registers.H) < 0;
+	registers.CCR.Z = registers.H == 0 && registers.X == 0;
+}
 
 
 
 void M6808::LSL() {
-    FAIL();
-};
+	uint8_t *operand = GetReadModifyWriteOperand();
+    
+	uint8_t b7 = ((int8_t)(*operand)) < 0;
+	*operand = (*operand) << 1;
+	uint8_t r7 = ((int8_t)(*operand)) < 0;
+	
+	registers.CCR.V = (b7 && !r7) || (!b7 && r7);
+	registers.CCR.N = r7;
+	registers.CCR.Z = (*operand) == 0;
+	registers.CCR.C = b7;
+}
 
 
 
 void M6808::LSR() {
-    FAIL();
-};
+    uint8_t *operand = GetReadModifyWriteOperand();
+    
+	uint8_t b0 = (*operand) & 1;
+	*operand = (*operand) >> 1;
+	
+	registers.CCR.V = b0;
+	registers.CCR.N = 0;
+	registers.CCR.Z = (*operand) == 0;
+	registers.CCR.C = b0;
+}
 
 
 
@@ -253,28 +309,62 @@ void M6808::MOV() {
 	registers.CCR.V = 0;
 	registers.CCR.Z = *pDest == 0;
 	registers.CCR.N = ((int8_t)*pDest) < 0;
-};
+}
 
 
 void M6808::NSA() {
-    FAIL();
-};
+	uint8_t nib1 = registers.A & 0x0F;
+	uint8_t nib2 = (registers.A & 0xF0) >> 4;
+
+	registers.PC++;
+
+	registers.A = nib1 << 4 | nib2;
+}
 
 void M6808::ROL() {
-    FAIL();
-};
+	uint8_t *operand = GetReadModifyWriteOperand();
+    
+	uint8_t b7 = ((int8_t)(*operand)) < 0;
+	*operand = (*operand) << 1 | registers.CCR.C;
+	uint8_t r7 = ((int8_t)(*operand)) < 0;
+	
+	registers.CCR.V = (b7 && !r7) || (!b7 && r7);
+	registers.CCR.N = r7;
+	registers.CCR.Z = (*operand) == 0;
+	registers.CCR.C = b7;
+}
 
 void M6808::ROR() {
-    FAIL();
-};
+    uint8_t *operand = GetReadModifyWriteOperand();
+    
+	uint8_t b0 = (*operand) & 1;
+	*operand = (*operand) >> 1 | (registers.CCR.C << 7);
+	
+	registers.CCR.V = b0;
+	registers.CCR.N = 0;
+	registers.CCR.Z = (*operand) == 0;
+	registers.CCR.C = b0;
+}
 
 void M6808::STHX() {
-    FAIL();
-};
+	registers.PC++;
+    uint8_t memoryLocation = memory[registers.PC++];
+
+	memory[memoryLocation] = registers.H;
+	memory[memoryLocation + 1] = registers.X;
+
+	registers.CCR.V = 0;
+	registers.CCR.N = registers.H < 0;
+	registers.CCR.Z = (registers.H == 0 && registers.X == 0);
+}
 
 void M6808::TST() {
-    FAIL();
-};
+    uint8_t value = GetRegisterMemoryOperand();
+
+	registers.CCR.V = 0;
+	registers.CCR.N = value < 0;
+	registers.CCR.Z = value == 0;
+}
 
 /**
  * @brief Load Accumulator from Memory
@@ -293,7 +383,7 @@ void M6808::LDA() {
 	registers.CCR.Z = number == 0;
 	registers.CCR.N = ((int8_t)number) < 0;
 	registers.CCR.V = 0;
-};
+}
 
 
 
@@ -315,11 +405,17 @@ void M6808::STA() {
 	registers.CCR.Z = registers.A == 0;
 	registers.CCR.N = ((int8_t)registers.A) < 0;
 	registers.CCR.V = 0;
-};
+}
 
 void M6808::EOR() {
-    FAIL();
-};
+    uint8_t number = GetRegisterMemoryOperand();
+
+	registers.A = registers.A ^ number;
+
+	registers.CCR.V = 0;
+	registers.CCR.N = registers.A < 0;
+	registers.CCR.Z = registers.A == 0;
+}
 
 /**
  * @brief Load X (Index Register Low) from Memory
@@ -338,12 +434,18 @@ void M6808::LDX() {
 	registers.CCR.Z = number == 0;
 	registers.CCR.N = ((int8_t)number) < 0;
 	registers.CCR.V = 0;
-};
+}
 
 
 void M6808::STX() {
-    FAIL();
-};
+    uint8_t addr = GetRegisterMemoryAddress();
+
+	memory[addr] = registers.X;
+
+	registers.CCR.V = 0;
+	registers.CCR.N = registers.X < 0;
+	registers.CCR.Z = registers.X == 0;
+}
 
 
 /**
@@ -355,11 +457,29 @@ void M6808::STX() {
  *  - unaffected
  */
 void M6808::BCLR() {
-    FAIL();
-};
+    uint8_t opCode = memory[registers.PC++];
+	uint8_t addr = memory[registers.PC++];
+	uint8_t* memLoc = &memory[addr];
+
+	uint8_t shift = (opCode & 0x0F) / 2;
+	*memLoc = *memLoc & (~(1 << shift));
+}
 
 
 
+/**
+ * @brief Set Bit n in Memory
+ * 
+ * Sets bit n (n = 7, 6, 5, … 0) in location M. All other bits in M are unaffected
+ * 
+ * CCR:
+ *  - unaffected
+ */
 void M6808::BSET() {
-    FAIL();
-};
+    uint8_t opCode = memory[registers.PC++];
+	uint8_t addr = memory[registers.PC++];
+	uint8_t* memLoc = &memory[addr];
+
+	uint8_t shift = (opCode & 0x0F) / 2;
+	*memLoc = *memLoc | (1 << shift);
+}
